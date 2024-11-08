@@ -197,7 +197,6 @@
         <label>Category: 
             <select id="category-filter" oninput="filterTable()">
                 <option value="" disabled selected>Select a category</option>
-                <option value="all">All</option>
                 <option value="food">Food</option>
                 <option value="household">Households</option>
                 <option value="social_life">Social Life</option>
@@ -271,7 +270,116 @@
     </div>
 
     <script>
-        // JavaScript functions remain the same as provided in your original code
+        let transactionsData = [];
+
+        // Functions to open/close modals
+        function showAddExpenseModal() {
+            document.getElementById("addExpenseModal").style.display = "block";
+        }
+        function closeAddExpenseModal() {
+            document.getElementById("addExpenseModal").style.display = "none";
+        }
+        function showAddIncomeModal() {
+            document.getElementById("addIncomeModal").style.display = "block";
+        }
+        function closeAddIncomeModal() {
+            document.getElementById("addIncomeModal").style.display = "none";
+        }
+
+        async function submitExpense() {
+            const description = document.getElementById("expense-description").value;
+            const amount = parseFloat(document.getElementById("expense-amount").value);
+            const importance = document.getElementById("expense-importance").checked ? "Important" : "Not Important";
+
+            await fetch("/add_expense", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ description, amount, importance })
+            });
+            closeAddExpenseModal();
+            loadTransactions();
+        }
+
+        async function submitIncome() {
+            const description = document.getElementById("income-description").value;
+            const amount = parseFloat(document.getElementById("income-amount").value);
+            const category = document.getElementById("income-category").value;
+            const importance = document.getElementById("income-importance").checked ? "Important" : "Not Important";
+
+            await fetch("/add_income", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ description, amount, category, importance })
+            });
+            closeAddIncomeModal();
+            loadTransactions();
+        }
+
+        // Load transactions dynamically and store in transactionsData
+        async function loadTransactions() {
+            const response = await fetch("/get_transactions");
+            transactionsData = await response.json();
+            displayTransactions(transactionsData);
+        }
+
+        // Display transactions in the table based on filtered data
+        function displayTransactions(data) {
+            const tbody = document.getElementById("transactions-body");
+            tbody.innerHTML = "";
+            data.forEach(transaction => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${transaction.Timestamp}</td>
+                    <td>${transaction.category}</td>
+                    <td>${transaction.item}</td>
+                    <td>${transaction.amount}</td>
+                    <td>${transaction.type}</td>
+                    <td>${transaction.importance}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter function to filter transactions based on input values
+        function filterTable() {
+            const categoryFilter = document.getElementById("category-filter").value.toLowerCase();
+            const importanceFilter = document.getElementById("importance-filter").value;
+            const dateFilter = document.getElementById("date-filter").value;
+            const typeFilter = document.getElementById("type-filter").value;
+
+            const filteredData = transactionsData.filter(transaction => {
+                const matchesCategory = transaction.category.toLowerCase().includes(categoryFilter);
+                const matchesImportance = !importanceFilter || transaction.importance === importanceFilter;
+                const matchesDate = !dateFilter || transaction.Timestamp.startsWith(dateFilter);
+                const matchesType = !typeFilter || transaction.type === typeFilter;
+
+                return matchesCategory && matchesImportance && matchesDate && matchesType;
+            });
+
+            displayTransactions(filteredData);
+        }
+
+        // Voice Record Expense button functionality
+        async function voiceRecordExpense() {
+            // Show the "Listening..." message
+            const recordingStatus = document.getElementById("recording-status");
+            recordingStatus.style.display = "block";
+            recordingStatus.innerText = "Listening...";
+
+            // Simulate recording and processing time
+            await fetch("/voice_record_expense", { method: "POST" });
+
+            // Update the message to indicate recording completion
+            recordingStatus.innerText = "Recording complete";
+            setTimeout(() => { 
+                recordingStatus.style.display = "none"; 
+            }, 2000);
+
+            loadTransactions();
+        }
+
+        // Initial load
+        loadTransactions();
     </script>
 </body>
 </html>
