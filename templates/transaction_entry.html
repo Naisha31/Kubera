@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 45px;
+            width: 45px;
+            border: solid 2px black;
+            border-radius: 10px;
+            margin-right: 0.5em;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+
+        .container {
+            padding: 2em;
+            max-width: 800px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        button {
+            margin-top: 1em;
+            padding: 1em;
+            background-color: #238636;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2ea043;
+        }
+
+        #transactions-table {
+            width: 100%;
+            margin-top: 1em;
+            border-collapse: collapse;
+            background-color: #30363d;
+            color: #c9d1d9;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #transactions-table th, #transactions-table td {
+            padding: 1em;
+            text-align: left;
+        }
+
+        #transactions-table th {
+            background-color: #161b22;
+            color: #58a6ff;
+        }
+
+        #transactions-table tr:nth-child(even) {
+            background-color: #21262d;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #21262d;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            width: 80%;
+            max-width: 400px;
+            z-index: 1001;
+        }
+
+        .modal h2 {
+            color: #58a6ff;
+            margin-top: 0;
+        }
+
+        .modal label {
+            display: block;
+            margin-top: 1em;
+        }
+
+        .modal input, .modal select {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.5em;
+            background-color: #30363d;
+            border: none;
+            border-radius: 4px;
+            color: #c9d1d9;
+        }
+
+        #recording-status {
+            margin-top: 10px;
+            color: #58a6ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="../static/kubera.png" alt="Kubera Logo"/>
+            <a href="/">Kubera Financial Manager</a>
+        </div>
+        <div class="nav-links">
+            <a href="/transactions">Transactions</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/portfolio">Stock News Portfolio</a>
+            <a href="/">Finbot</a>
+            <a href="/signup">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Transaction Tracker</h1>
+        <center>
+            <button onclick="showAddExpenseModal()">Add Expense</button>
+            <button onclick="showAddIncomeModal()">Add Income</button><br>
+            <button onclick="voiceRecordExpense()">Voice Record Expense</button>
+            <div id="recording-status" style="display: none;">Listening...</div>
+        </center>
+    </div>
+
+    <div class="container">
+        <h2>Filter Transactions</h2>
+        <label>Category: 
+            <select id="category-filter" oninput="filterTable()">
+                <option value="" disabled selected>Select a category</option>
+                <option value="all">All</option>
+                <option value="food">Food</option>
+                <option value="household">Households</option>
+                <option value="social_life">Social Life</option>
+                <option value="transportation">Transportation</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="shopping">Shopping</option>
+                <option value="health">Health</option>
+                <option value="education">Education</option>
+                <option value="gift">Gift</option>
+                <option value="others">Others</option>
+            </select>            
+        </label>
+
+        <label for="importance-filter">Importance:</label>
+        <select id="importance-filter" onchange="filterTable()">
+            <option value="">All</option>
+            <option value="Important">Important</option>
+            <option value="Not Important">Not Important</option>
+        </select>
+
+        <label for="date-filter">Date:</label>
+        <input type="date" id="date-filter" onchange="filterTable()">
+
+        <label for="type-filter">Type:</label>
+        <select id="type-filter" onchange="filterTable()">
+            <option value="">All</option>
+            <option value="Expense">Expense</option>
+            <option value="Income">Income</option>
+        </select>
+
+        <table id="transactions-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Importance</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-body">
+                <!-- Dynamic rows will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="addExpenseModal" class="modal">
+        <h2>Add Expense</h2>
+        <label>Description: <input type="text" id="expense-description"></label>
+        <label>Amount: <input type="number" id="expense-amount"></label>
+        <label>Importance: <input type="checkbox" id="expense-importance"> Important</label>
+        <button onclick="submitExpense()">Submit Expense</button>
+        <button onclick="closeAddExpenseModal()">Close</button>
+    </div>
+
+    <div id="addIncomeModal" class="modal">
+        <h2>Add Income</h2>
+        <label>Description: <input type="text" id="income-description"></label>
+        <label>Amount: <input type="number" id="income-amount"></label>
+        <label>Category: 
+            <select id="income-category">
+                <option value="salary">Salary</option>
+                <option value="allowance">Allowance</option>
+                <option value="others">Others</option>
+            </select>
+        </label>
+        <label>Importance: <input type="checkbox" id="income-importance"> Important</label>
+        <button onclick="submitIncome()">Submit Income</button>
+        <button onclick="closeAddIncomeModal()">Close</button>
+    </div>
+
+    <script>
+        // JavaScript functions remain the same as provided in your original code
+    </script>
+</body>
+</html>

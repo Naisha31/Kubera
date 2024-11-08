@@ -1,0 +1,236 @@
+/* General Styling */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    margin: 0;
+    padding: 0;
+    animation: fadeIn 2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.form-header img {
+            width: 120px;
+            margin-bottom: 1em;
+            opacity: 0;
+            animation: fadeInLogo 1.5s ease forwards 0.5s;
+        }
+
+        @keyframes fadeInLogo {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+/* Navbar Styling */
+.navbar {
+    background-color: #161b22;
+    padding: 1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar a {
+    color: #c9d1d9;
+    text-decoration: none;
+    padding: 0.5em 1em;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.navbar a:hover {
+    color: #58a6ff;
+}
+
+/* Container Styling */
+.container {
+    padding: 2em;
+    max-width: 800px;
+    margin: 4em auto;
+    background: #21262d;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+    transform: translateY(50px);
+    opacity: 0;
+    animation: slideIn 1.5s ease forwards;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header Styling */
+h1 {
+    text-align: center;
+    color: #58a6ff;
+    font-weight: 700;
+    margin-bottom: 1em;
+}
+
+/* Button Styling */
+button {
+    padding: 0.8em;
+    margin: 0.5em 0.5em 1.5em 0;
+    background-color: #238636;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2ea043;
+}
+
+.container {
+            padding: 2em;
+            max-width: 600px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+
+/* Filter Section */
+#category-filter, #importance-filter, #date-filter, #type-filter {
+    margin: 0.5em 0.5em;
+    padding: 0.5em;
+    background-color: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    background-color: #21262d;
+    color: #c9d1d9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #30363d;
+}
+
+th {
+    background-color: #161b22;
+    color: #58a6ff;
+}
+
+tr:nth-child(even) {
+    background-color: #30363d;
+}
+
+/* Modal Styling */
+#addExpenseModal, #addIncomeModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2em;
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+#addExpenseModal h2, #addIncomeModal h2 {
+    color: #58a6ff;
+}
+
+label {
+    color: #c9d1d9;
+    font-weight: 500;
+    margin-top: 1em;
+}
+
+input[type="text"], input[type="number"], select {
+    padding: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+    background-color: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    width: 20%;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+    margin-right: 0.5em;
+    transform: scale(1.2);
+}
+
+/* Fade-in Animation for Table Rows */
+@keyframes rowFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+tbody tr {
+    animation: rowFadeIn 0.5s ease;
+}
+
+.header-title {
+    text-align: center;
+    color: #58a6ff;
+    margin-top: 20px;
+    font-size: 2em;
+}
+
+.dropdown {
+    margin: 20px auto;
+    width: 80%;
+    background-color: #161b22;
+    color: #c9d1d9;
+}
+
+.graph-container {
+    background-color: #21262d;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    margin: 20px auto;
+    width: 90%;
+}

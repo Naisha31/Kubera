@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubera Financial Manager - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 45px;
+            width: 45px;
+            border: solid 2px black;
+            border-radius: 10px;
+            margin-right: 0.5em;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+
+        .container {
+            padding: 2em;
+            max-width: 1000px;
+            margin: 4em auto;
+            background: #21262d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="../static/kubera.png" alt="Kubera Logo"/>
+            <a href="/">Kubera Financial Manager</a>
+        </div>
+        <div class="nav-links">
+            <a href="/transactions">Transactions</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/portfolio">Stock News Portfolio</a>
+            <a href="/">Finbot</a>
+            <a href="/signup">Sign Up</a>
+        </div>
+    </div>
+
+    <!-- Container where Dash app will be rendered -->
+    <div class="container">
+        {{ dash_content|safe }}
+    </div>
+</body>
+</html>
