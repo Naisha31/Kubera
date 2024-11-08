@@ -6,7 +6,149 @@
     <title>Kubera Financial Manager - Sign In & Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* Your existing CSS here */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            width: 400px;
+            padding: 2em;
+            background: #2c2c2c;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 1.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 1em;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .form-header img {
+            width: 100px;
+            margin-bottom: 0.5em;
+            opacity: 0;
+            animation: fadeInLogo 1.5s ease forwards 0.5s;
+        }
+
+        @keyframes fadeInLogo {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 400;
+            margin-top: 1em;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            padding: 0.8em;
+            margin-top: 0.5em;
+            border: 1px solid #444;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #333;
+            color: #f0f2f5;
+            animation: fadeInInput 2s ease forwards 1s;
+        }
+
+        @keyframes fadeInInput {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        button {
+            margin-top: 1.5em;
+            padding: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 2em;
+            opacity: 0;
+            animation: fadeInFooter 1.5s ease forwards 1.5s;
+        }
+
+        @keyframes fadeInFooter {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-footer a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +208,29 @@
                 alert('Invalid credentials.');
                 return false;
             }
+        }
+
+        function validateSignup() {
+            const email = document.getElementById('new-email').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+                alert('Please enter a valid email address.');
+                return false;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return false;
+            }
+
+            return true;
         }
     </script>
 </body>

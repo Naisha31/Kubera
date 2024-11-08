@@ -165,6 +165,24 @@
             color: #58a6ff;
             font-weight: bold;
         }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .form-header img {
+            width: 120px;
+            margin-bottom: 1em;
+            opacity: 0;
+            animation: fadeInLogo 1.5s ease forwards 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -183,7 +201,8 @@
     </div>
 
     <div class="container">
-        <h1>Transaction Tracker</h1>
+        <div class="form-header">
+        <h2>Transaction Tracker</h2></div>
         <center>
             <button onclick="showAddExpenseModal()">Add Expense</button>
             <button onclick="showAddIncomeModal()">Add Income</button><br>
@@ -193,10 +212,10 @@
     </div>
 
     <div class="container">
-        <h2>Filter Transactions</h2>
+        <h2>Transactions</h2>
         <label>Category: 
             <select id="category-filter" oninput="filterTable()">
-                <option value="" disabled selected>Select a category</option>
+                <option value="">All</option>
                 <option value="food">Food</option>
                 <option value="household">Households</option>
                 <option value="social_life">Social Life</option>
@@ -207,6 +226,9 @@
                 <option value="education">Education</option>
                 <option value="gift">Gift</option>
                 <option value="others">Others</option>
+                <option value="salary">Salary</option>
+                <option value="allowance">Allowance</option>
+
             </select>            
         </label>
 
