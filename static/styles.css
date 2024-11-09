@@ -69,6 +69,7 @@ body {
     transform: translateY(50px);
     opacity: 0;
     animation: slideIn 1.5s ease forwards;
+    align-items: center;
 }
 
 @keyframes slideIn {
@@ -88,6 +89,12 @@ h1 {
     color: #58a6ff;
     font-weight: 700;
     margin-bottom: 1em;
+}
+
+h2 {
+    margin: 0;
+    font-weight: 700;
+    color: #58a6ff;
 }
 
 /* Button Styling */
@@ -154,6 +161,30 @@ th {
 
 tr:nth-child(even) {
     background-color: #30363d;
+}
+
+#transactions-table {
+    width: 100%;
+    margin-top: 1em;
+    border-collapse: collapse;
+    background-color: #30363d;
+    color: #c9d1d9;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#transactions-table th, #transactions-table td {
+    padding: 1em;
+    text-align: left;
+}
+
+#transactions-table th {
+    background-color: #161b22;
+    color: #58a6ff;
+}
+
+#transactions-table tr:nth-child(even) {
+    background-color: #21262d;
 }
 
 /* Modal Styling */

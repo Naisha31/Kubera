@@ -809,6 +809,300 @@ def get_cleaned_data():
     conn.close()
     return df
 
+####################Query system########################
+
+api_endpoint = "https://api.cohere.ai/v1/generate"
+
+@app.route('/query_system')
+def query_to_sql_page():
+    return render_template('query_system.html')
+
+@app.route('/generate-sql', methods=['POST'])
+def generate_sql():
+    data = request.json
+    question = data.get('question', '')
+
+    headers = {
+        "Authorization": f"Bearer {COHERE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    prompt = f"""
+    Convert the following question into an SQLite query based on the 'transactions' table structure.
+
+    Table: transactions
+    Columns:
+      - transaction_id (INTEGER, Primary Key)
+      - Timestamp (DATETIME)
+      - category (VARCHAR(30))
+      - item (VARCHAR(50))
+      - amount (INT)
+      - type (VARCHAR(10))
+      - importance (VARCHAR(20))
+
+    The category column has the following predefined values:
+    [food, social_life, transportation, entertainment, household, shopping, health, education, gift, others]
+
+    The type column has the following predefined values:
+    [Expense, Income]
+
+    The importance column has the following predefined values:
+    [Important, Not Important]
+
+    For specific items please use the item column to filter.
+
+    Question: {question}
+
+    SQL Query:
+    """
+
+
+    payload = {
+        "model": "command-xlarge-nightly",
+        "prompt": prompt,
+        "max_tokens": 100,
+        "temperature": 0.3,
+        "k": 0,
+        "p": 0.75,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "stop_sequences": [";"]
+    }
+
+    try:
+        import logging
+        # Send the request to Cohere API
+        response = requests.post(api_endpoint, json=payload, headers=headers)
+        response.raise_for_status()
+
+        response_data = response.json()
+        if 'generations' not in response_data or not response_data['generations']:
+            return jsonify(error="Cohere API did not return a valid SQL query."), 500
+
+        # Extract the SQL query text
+        sql_statement = response_data['generations'][0]['text'].strip()
+        logging.debug(f"Generated SQL (raw): {sql_statement}")
+        
+
+        # Remove any markdown or code block formatting from the SQL query
+        sql_statement = re.sub(r"```[a-z]*\n*", "", sql_statement).replace("```", "").strip()
+        logging.debug(f"Generated SQL (cleaned): {sql_statement}")
+        print(sql_statement)
+
+        # Execute the SQL query on the transactions database
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(sql_statement.strip())
+            rows = cursor.fetchall()
+            conn.close()
+
+            # Check if rows are empty
+            if not rows:
+                return jsonify(result="No data found for the query.")
+
+            # Process results depending on the structure
+            if len(rows) == 1 and len(rows[0]) == 1:
+                # Single value result
+                return jsonify(result=rows[0][0])
+            elif len(rows) == 1:
+                # Single row with multiple columns
+                columns = [description[0] for description in cursor.description]
+                result = dict(zip(columns, rows[0]))
+                return jsonify(result=result)
+            else:
+                # Multiple rows
+                columns = [description[0] for description in cursor.description]
+                results = [dict(zip(columns, row)) for row in rows]
+                return jsonify(result=results)
+
+        except sqlite3.Error as e:
+            conn.close()
+            error_message = f"SQL execution error: {str(e)}"
+            print(error_message)
+            return jsonify(error=error_message), 500
+
+    except requests.exceptions.RequestException as e:
+        error_message = e.response.json() if e.response else str(e)
+        logging.error(f"Request to Cohere API failed: {error_message}")
+        return jsonify(error="Request failed: " + error_message), 500
+    except ValueError:
+        logging.error("Unexpected response from Cohere API.")
+        return jsonify(error="Unexpected response from Cohere API."), 500
+
+#############################goal setting########################################
+
+@app.route('/set-goal-page')
+def set_goal_page():
+    return render_template('goal_setting.html')
+
+# Route for Goal Setting
+@app.route('/set-goal', methods=['POST'])
+def set_goal():
+    try:
+        # Parse user input from the request
+        data = request.json
+        target_amount = float(data['targetAmount'])
+        target_period = int(data['targetPeriod'])
+
+        if not isinstance(target_amount, (int, float)):
+            return jsonify({"error": "targetAmount must be a number"}), 400
+        if not isinstance(target_period, int):
+            return jsonify({"error": "targetPeriod must be an integer"}), 400
+        
+        # Fetch data from database
+        conn = get_db_connection()
+        df = pd.read_sql_query("SELECT * FROM transactions WHERE Importance = 'Not Important' AND Type = 'Expense'", conn)
+        conn.close()
+
+        # Data pre-processing and binning logic
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+        df = df.dropna(subset=['amount'])
+
+
+        
+        # Check if columns are in lowercase or uppercase
+        df = df[(df['importance'] == 'Not Important') & (df['type'] == 'Expense')]
+
+        df = df.sort_values('Timestamp')
+        base_date = df['Timestamp'].min()
+
+        print("Debug: Target period as int:", target_period)
+        print("Debug: First few rows of df:", df.head())
+
+        
+        # Calculate the number of months since the base_date
+        df['Months_Since_Base'] = (df['Timestamp'].dt.year - base_date.year) * 12 + (df['Timestamp'].dt.month - base_date.month)
+        df['Time_Bin'] = (df['Months_Since_Base'] // target_period).astype(int)
+
+        # Calculate the start and end date for each bin using apply
+        df['Bin_Start'] = df['Time_Bin'].apply(lambda x: base_date + pd.DateOffset(months=x * target_period))
+
+        # Ensure Bin_Start is a datetime object
+        df['Bin_Start'] = pd.to_datetime(df['Bin_Start'], errors='coerce')
+
+        # Debugging output to check if conversion was successful
+        print("Bin_Start Data Types:")
+        print(df['Bin_Start'].dtypes)
+
+        # Check if there are any NaT values in Bin_Start
+        if df['Bin_Start'].isnull().any():
+            print("Warning: Some Bin_Start values could not be converted to datetime.")
+
+        # Calculate Bin_End
+        df['Bin_End'] = df['Bin_Start'] + pd.DateOffset(months=target_period) - pd.DateOffset(days=1)
+
+        # Ensure Bin_End is a datetime object
+        df['Bin_End'] = pd.to_datetime(df['Bin_End'], errors='coerce')
+
+        # After calculating Bin_End
+        print("Bin_Start values:")
+        print(df['Bin_Start'])
+
+        print("Bin_End values:")
+        print(df['Bin_End'])
+
+        # Check the types of the columns involved in the next operation
+        print("Data types of columns involved in calculations:")
+        print(df.dtypes)
+
+        # Debugging output to check if conversion was successful
+        print("Bin_End Data Types:")
+        print(df['Bin_End'].dtypes)
+
+        # Check if there are any NaT values in Bin_End
+        if df['Bin_End'].isnull().any():
+            print("Warning: Some Bin_End values could not be calculated.")
+
+        print("\nDataset after filtering for non-important expenses and applying time bins with start and end dates:")
+        print(df[['Timestamp', 'amount', 'category', 'Time_Bin', 'Bin_Start', 'Bin_End']].head())
+
+
+        # Calculate category-wise spending summary
+        bin_category_summary = df.groupby(['Time_Bin', 'category', 'Bin_Start', 'Bin_End']).agg(
+            Total_Spent=('amount', 'sum'),
+            Average_Spent=('amount', 'mean')
+        ).reset_index()
+
+        print("\nCategory-Wise Spending Summary per Time Bin (with Start and End Dates):")
+        print(bin_category_summary)
+
+        # Define category weights
+        category_weights = {
+            'food': 0.2,
+            'social_life': 0.7,
+            'transportation': 0.3,
+            'entertainment': 0.6,
+            'household': 0.4,
+            'shopping': 0.5,
+            'health': 0.3,
+            'education': 0.2,
+            'gift': 0.5,
+            'others': 0.4
+        }
+
+        # Calculate the target savings per bin
+        target_savings_per_bin = target_amount / (len(bin_category_summary['Time_Bin'].unique()))
+
+        # For each time bin, calculate how much to save in each category
+        bin_saving_suggestions = []
+
+        for bin_id, bin_data in bin_category_summary.groupby('Time_Bin'):
+            bin_savings = {}
+            # Calculate total weighted spending only for non-zero average spending values
+            total_weighted_spending = sum(
+                row['Average_Spent'] * category_weights.get(row['category'], 0)
+                for _, row in bin_data.iterrows() if row['Average_Spent'] > 0
+            )
+
+            if total_weighted_spending > 0:
+                # Calculate target savings for each category in this bin
+                for _, row in bin_data.iterrows():
+                    category = row['category']
+                    avg_spent = row['Average_Spent']
+                    weight = category_weights.get(category, 0)
+
+                    # Proportionate savings based on weight and average spending
+                    category_target_saving = (weight * avg_spent / total_weighted_spending) * target_savings_per_bin
+                    bin_savings[category] = category_target_saving
+            else:
+                # If no spending in this bin, set all savings suggestions to zero
+                for _, row in bin_data.iterrows():
+                    bin_savings[row['category']] = 0.0
+
+            bin_saving_suggestions.append((bin_id, bin_savings))
+
+        # Display bin saving suggestions
+        for bin_id, suggestions in bin_saving_suggestions:
+            print(f"\nSuggestions for Bin {bin_id}:")
+            for category, saving in suggestions.items():
+                print(f"- Save {saving:.2f} from {category}")
+
+        from collections import defaultdict
+
+        # Initialize a dictionary to store cumulative savings for each category
+        cumulative_savings = defaultdict(float)
+        bin_count = len(bin_saving_suggestions)
+
+        # Sum up savings suggestions for each category across all bins
+        for _, suggestions in bin_saving_suggestions:
+            for category, saving in suggestions.items():
+                cumulative_savings[category] += saving
+
+        # Calculate the average savings recommendation per category
+        average_savings_recommendations = {category: str(float(cumulative_savings[category])) for category in cumulative_savings}
+        
+        # Prepare recommendations
+        print("Debug: Final saving recommendations:", average_savings_recommendations)
+        return jsonify(savingRecommendations=average_savings_recommendations)
+
+    except Exception as e:
+        print("Error in '/set-goal':", str(e))
+        return jsonify(error="Internal Server Error: " + str(e)), 500
+
+
+
 # Run the app
 if __name__ == "__main__":
     app.run(port=3000, debug=True)

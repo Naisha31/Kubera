@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 45px;
+            width: 45px;
+            border: solid 2px black;
+            border-radius: 10px;
+            margin-right: 0.5em;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="../static/kubera.png" alt="Kubera Logo"/>
+            <a href="/"><b>Kubera Financial Manager</b></a>
+        </div>
+        <div class="nav-links">
+            <a href="/transactions">Transactions</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/portfolio">Stock News Portfolio</a>
+            <a href="/">FinBot</a>
+            <a href="/query_system">Query</a>
+            <a href="/set-goal-page">Set Goal</a>
+            <a href="/signup">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <center>
+        <div class="form-header">
+            <h2>Transaction Query System</h2>
+        </div>
+    </center>
+    <br>
+
+        <form id="query-form" action="/generate-sql" method="post">
+            <label for="question">Enter your question:</label>
+            <input type="text" id="question" name="question" placeholder="e.g., What are my expenses in the food category?" required style="width: 70%;">
+            <br>
+            <center><button type="submit">Submit Query</button></center>
+        </form>
+
+    </div>
+    <center>
+        <div class="container">
+    <div id="response" style="display: none;">
+        <h3>Query Results:</h3>
+        <p id="single-value" style="display: none;"></p>
+        
+        <!-- Section to display a table result -->
+        <table id="transactions-table" style="display: none;">
+        </table>
+    </div>
+</div>
+</center>
+
+    <script>
+        document.getElementById("query-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const question = document.getElementById("question").value;
+            const responseContainer = document.getElementById("response");
+            const resultTable = document.getElementById("transactions-table");
+            const singleValue = document.getElementById("single-value");
+
+            try {
+                const response = await fetch("/generate-sql", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Clear previous results
+                    resultTable.innerHTML = "";
+                    resultTable.style.display = "none";
+                    singleValue.style.display = "none";
+
+                    if (Array.isArray(data.result) && data.result.length > 0) {
+                        // Display as table if result is an array of dictionaries
+                        const headers = Object.keys(data.result[0]);
+                        const headerRow = document.createElement("tr");
+                        headers.forEach(header => {
+                            const th = document.createElement("th");
+                            th.textContent = header;
+                            headerRow.appendChild(th);
+                        });
+                        resultTable.appendChild(headerRow);
+                    
+                        data.result.forEach(row => {
+                            const rowElement = document.createElement("tr");
+                            headers.forEach(header => {
+                                const td = document.createElement("td");
+                                td.textContent = row[header];
+                                rowElement.appendChild(td);
+                            });
+                            resultTable.appendChild(rowElement);
+                        });
+                    
+                        resultTable.style.display = "table";
+                    } else if (typeof data.result === "string") {
+                        // Handle string result ("No data found")
+                        singleValue.textContent = data.result;
+                        singleValue.style.display = "block";
+                    } else {
+                        // Display single value if result is not an array
+                        singleValue.textContent = `Result: ${data.result}`;
+                        singleValue.style.display = "block";
+                    }
+
+                    responseContainer.style.display = "block";
+                } else {
+                    singleValue.textContent = "Error fetching query results. Please try again.";
+                    singleValue.style.display = "block";
+                    responseContainer.style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                singleValue.textContent = "Error fetching query results. Please try again.";
+                singleValue.style.display = "block";
+                responseContainer.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

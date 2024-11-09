@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Savings Goal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .navbar {
+            background-color: #161b22;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 45px;
+            width: 45px;
+            border: solid 2px black;
+            border-radius: 10px;
+            margin-right: 0.5em;
+        }
+
+        .navbar a {
+            color: #c9d1d9;
+            text-decoration: none;
+            padding: 0.5em 1em;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="../static/kubera.png" alt="Kubera Logo"/>
+            <a href="/"><b>Kubera Financial Manager</b></a>
+        </div>
+        <div class="nav-links">
+            <a href="/transactions">Transactions</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/portfolio">Stock News Portfolio</a>
+            <a href="/">FinBot</a>
+            <a href="/query_system">Query</a>
+            <a href="/set-goal-page">Set Goal</a>
+            <a href="/signup">Sign Up</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <center><h2>Set Your Savings Goal</h2></center>
+        <br>
+        <form id="goal-form" action="/set-goal" method="post">
+            <label for="targetAmount">Enter the total amount you want to save:</label>
+            <input type="number" id="targetAmount" name="targetAmount" required><br>
+            <label for="targetPeriod">Enter the time period (in months) to save this amount:</label>
+            <input type="number" id="targetPeriod" name="targetPeriod" required>
+            <center><button type="submit">Set Goal</button></center>
+        </form>
+
+        <div id="result" style="display: none;">
+            <h3>Savings Recommendations</h3>
+            <ul id="recommendations"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("goal-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+    
+            const targetAmount = parseFloat(document.getElementById("targetAmount").value);  // Parse as float
+            const targetPeriod = parseInt(document.getElementById("targetPeriod").value, 10);  // Parse as integer
+            const resultDiv = document.getElementById("result");
+            const recommendationsList = document.getElementById("recommendations");
+    
+            try {
+                const response = await fetch("/set-goal", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetAmount, targetPeriod })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.savingRecommendations) {
+                        recommendationsList.innerHTML = "";
+                        for (const [category, saving] of Object.entries(data.savingRecommendations)) {
+                            const listItem = document.createElement("li");
+                            listItem.textContent = `Save an average of ${parseFloat(saving).toFixed(2)} from ${category}`;
+                            recommendationsList.appendChild(listItem);
+                        }
+                        resultDiv.style.display = "block";
+                    } else {
+                        throw new Error("Invalid data structure from server");
+                    }
+                } else {
+                    throw new Error("Server responded with an error");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                recommendationsList.innerHTML = "Error calculating savings. Please try again.";
+                resultDiv.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
