@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kubera Financial Manager - Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Set Bill Payment Reminder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
-            margin: 0;
-            padding: 0;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         .navbar {
@@ -44,19 +45,11 @@
             text-decoration: none;
             padding: 0.5em 1em;
             font-weight: 500;
+            transition: color 0.3s;
         }
 
         .navbar a:hover {
             color: #58a6ff;
-        }
-
-        .container {
-            padding: 2em;
-            max-width: 1000px;
-            margin: 4em auto;
-            background: #21262d;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
         }
     </style>
 </head>
@@ -77,10 +70,27 @@
             <a href="/signup">Sign Up</a>
         </div>
     </div>
+    </div>
 
-    <!-- Container where Dash app will be rendered -->
     <div class="container">
-        {{ dash_content|safe }}
+        <center><h2>Set Your Monthly Bill Payment Reminder</h2></center>
+        <br>
+        <form action="/set-reminder" method="post" id="reminder-form">
+            <label for="day">Enter the day of the month for the reminder:</label>
+            <input type="number" id="day" name="day" min="1" max="31" required>
+            <br>
+
+            <label for="hour">Enter the hour (24-hour format) for the reminder:</label>
+            <input type="number" id="hour" name="hour" min="0" max="23" required>
+            <br>
+
+            <label for="minute">Enter the minute for the reminder:</label>
+            <input type="number" id="minute" name="minute" min="0" max="59" required>
+
+            <center><button type="submit">Set Reminder</button></center>
+        </form>
+
+        <div id="status-message"></div>
     </div>
 </body>
 </html>

@@ -18,6 +18,11 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import threading
+import time
 
 
 app = Flask(__name__, static_url_path='/static')
@@ -1101,7 +1106,75 @@ def set_goal():
         print("Error in '/set-goal':", str(e))
         return jsonify(error="Internal Server Error: " + str(e)), 500
 
+######################Set reminders#####################################
+def send_bill_reminder(recipient_email):
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    sender_email = "kuberafinancemanager@gmail.com"  # Your email
+    sender_password = "zane pwxk hhic ppik"  # Your email app-specific password
 
+    # Email subject and body
+    subject = "Monthly Bill Payment Reminder"
+    body = """
+    Dear User,
+
+    This is your monthly reminder to pay your bills:
+    - Electricity Bill
+    - Water Bill
+    - Phone Bill
+    - Credit Card Bill
+
+    Please ensure these payments are made on time to avoid any late fees.
+
+    Thank you,
+    Your Friendly Reminder Bot
+    """
+
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = recipient_email
+    message["Subject"] = subject
+    message.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, recipient_email, message.as_string())
+        print("Reminder email sent successfully!")
+    except Exception as e:
+        print(f"Error sending reminder email: {e}")
+    finally:
+        server.quit()
+
+# Function to check and send the reminder at the specified time
+def schedule_reminder(day, hour, minute, recipient_email):
+    print(f"Reminder scheduled for day {day} at {hour:02d}:{minute:02d}.")
+    while True:
+        now = datetime.now()
+        if now.day == day and now.hour == hour and now.minute == minute:
+            send_bill_reminder(recipient_email)
+            break
+        time.sleep(60)  # Wait for a minute before checking again
+
+# Route to render the reminder setup page
+@app.route('/set-reminder-page')
+def set_reminder_page():
+    return render_template('set_reminder.html')
+
+# Route to handle the form submission
+@app.route('/set-reminder', methods=['POST'])
+def set_reminder():
+    day = int(request.form['day'])
+    hour = int(request.form['hour'])
+    minute = int(request.form['minute'])
+    recipient_email = "naisha.jain31@gmail.com"  # Replace with user's email if needed
+
+    # Start a new thread to avoid blocking the main app
+    reminder_thread = threading.Thread(target=schedule_reminder, args=(day, hour, minute, recipient_email))
+    reminder_thread.start()
+
+    return jsonify({"message": f"Reminder set for day {day} at {hour:02d}:{minute:02d}."})
 
 # Run the app
 if __name__ == "__main__":
